@@ -63,6 +63,25 @@ function getDishStyle(local, english) {
   return fallback;
 }
 
+/* Wikipedia image fetcher — free, no API key needed */
+const wikiImgCache = new Map();
+async function fetchWikiImage(dishName) {
+  if (wikiImgCache.has(dishName)) return wikiImgCache.get(dishName);
+  const p = (async () => {
+    try {
+      const q = encodeURIComponent(dishName.replace(/\s+/g, "_"));
+      const res = await fetch(`https://en.wikipedia.org/api/rest_v1/page/summary/${q}`);
+      if (!res.ok) return null;
+      const data = await res.json();
+      const thumb = data.thumbnail?.source || null;
+      const full = data.originalimage?.source || null;
+      return thumb ? { thumb, full: full || thumb } : null;
+    } catch { return null; }
+  })();
+  wikiImgCache.set(dishName, p);
+  return p;
+}
+
 function SpinWheel({ items, colors, onResult, onClose, label="name" }) {
   const cvs = useRef(null);
   const ang = useRef(0), vel = useRef(0), raf = useRef(null);
@@ -117,7 +136,7 @@ function SpinWheel({ items, colors, onResult, onClose, label="name" }) {
         <div style={{display:"flex",gap:10,marginTop:"1.25rem"}}>
           <button onClick={onClose} style={{flex:1,padding:"12px",borderRadius:14,border:"1px solid var(--border)",background:"transparent",cursor:"pointer",fontSize:14,color:"var(--text-secondary)",fontWeight:500}}>Cancel</button>
           {winner
-            ? <button onClick={()=>onResult(winner)} style={{flex:2,padding:"12px",borderRadius:14,border:"none",background:"var(--accent)",color:"#fff",cursor:"pointer",fontSize:14,fontWeight:600}}>{"Let\u2019s go!"}</button>
+            ? <button onClick={()=>onResult(winner)} style={{flex:2,padding:"12px",borderRadius:14,border:"none",background:"var(--accent)",color:"#fff",cursor:"pointer",fontSize:14,fontWeight:600}}>{"\u2019s go!"}</button>
             : <button onClick={spin} disabled={spinning} style={{flex:2,padding:"12px",borderRadius:14,border:"none",background:spinning?"var(--border)":"var(--accent)",color:spinning?"var(--text-muted)":"#fff",cursor:spinning?"not-allowed":"pointer",fontSize:14,fontWeight:600}}>{spinning?"Spinning\u2026":"Spin!"}</button>}
         </div>
         {winner && <button onClick={spin} style={{marginTop:10,width:"100%",padding:"10px",borderRadius:14,border:"1px solid var(--border)",background:"transparent",cursor:"pointer",fontSize:13,color:"var(--text-secondary)",fontWeight:500}}>Spin again</button>}
@@ -174,6 +193,36 @@ function PillBtn({ children, onClick, style:sx={} }) {
   return (<button onClick={onClick} style={{display:"inline-flex",alignItems:"center",gap:6,padding:"8px 18px",borderRadius:50,fontSize:13,fontWeight:600,cursor:"pointer",transition:"all 0.2s",whiteSpace:"nowrap",background:"rgba(255,255,255,.12)",color:"#fff",border:"1px solid rgba(255,255,255,.2)",backdropFilter:"blur(4px)",...sx}}>{children}</button>);
 }
 
+/* DishImage: shows wiki photo with emoji fallback */
+function DishImage({ english, icon, bg, style, imgStyle }) {
+  const [src, setSrc] = useState(null);
+  const [err, setErr] = useState(false);
+  useEffect(() => {
+    let cancelled = false;
+    fetchWikiImage(english).then(r => { if (!cancelled && r) setSrc(r.thumb); });
+    return () => { cancelled = true; };
+  }, [english]);
+  if (src && !err) {
+    return <img src={src} alt={english} onError={() => setErr(true)} style={{width:"100%",height:"100%",objectFit:"cover",...imgStyle}} />;
+  }
+  return <div style={{width:"100%",height:"100%",background:bg,display:"flex",alignItems:"center",justifyContent:"center",...style}}><span style={{fontSize:44}}>{icon}</span></div>;
+}
+
+/* DishImageFull: bigger image for detail view */
+function DishImageFull({ english, icon, bg }) {
+  const [src, setSrc] = useState(null);
+  const [err, setErr] = useState(false);
+  useEffect(() => {
+    let cancelled = false;
+    fetchWikiImage(english).then(r => { if (!cancelled && r) setSrc(r.full || r.thumb); });
+    return () => { cancelled = true; };
+  }, [english]);
+  if (src && !err) {
+    return <img src={src} alt={english} onError={() => setErr(true)} style={{width:"100%",height:"100%",objectFit:"cover",position:"absolute",inset:0}} />;
+  }
+  return <div style={{fontSize:"clamp(72px, 15vw, 110px)",lineHeight:1,filter:"drop-shadow(0 4px 16px rgba(0,0,0,.15))"}}>{icon}</div>;
+}
+
 const MenuCard = memo(function MenuCard({ item, ac, onClick }) {
   const { bg, icon } = getDishStyle(item.local, item.english);
   return (
@@ -181,10 +230,12 @@ const MenuCard = memo(function MenuCard({ item, ac, onClick }) {
       style={{background:"var(--bg-card)",border:"1px solid var(--border)",borderRadius:20,padding:0,cursor:"pointer",textAlign:"left",overflow:"hidden",display:"flex",flexDirection:"column",width:"100%",transition:"all 0.25s cubic-bezier(.4,0,.2,1)"}}
       onMouseEnter={e=>{e.currentTarget.style.transform="translateY(-4px)";e.currentTarget.style.boxShadow="var(--shadow-lg)";e.currentTarget.style.borderColor=ac;}}
       onMouseLeave={e=>{e.currentTarget.style.transform="translateY(0)";e.currentTarget.style.boxShadow="none";e.currentTarget.style.borderColor="var(--border)";}}>
-      <div style={{width:"100%",paddingTop:"56%",position:"relative",background:bg}}>
-        <div style={{position:"absolute",inset:0,display:"flex",alignItems:"center",justifyContent:"center",fontSize:44}}>{icon}</div>
-        <div style={{position:"absolute",top:10,left:10,background:ac,color:"#fff",fontSize:11,fontWeight:700,borderRadius:10,padding:"3px 10px"}}>#{item.rank}</div>
-        {item.prep && <div style={{position:"absolute",bottom:10,right:10,background:"rgba(0,0,0,.5)",backdropFilter:"blur(4px)",color:"#fff",fontSize:10,fontWeight:600,borderRadius:10,padding:"3px 10px"}}>{"\u23f1"} {item.prep}</div>}
+      <div style={{width:"100%",paddingTop:"56%",position:"relative",background:bg,overflow:"hidden"}}>
+        <div style={{position:"absolute",inset:0}}>
+          <DishImage english={item.english} icon={icon} bg={bg} />
+        </div>
+        <div style={{position:"absolute",top:10,left:10,background:ac,color:"#fff",fontSize:11,fontWeight:700,borderRadius:10,padding:"3px 10px",zIndex:1}}>#{item.rank}</div>
+        {item.prep && <div style={{position:"absolute",bottom:10,right:10,background:"rgba(0,0,0,.6)",backdropFilter:"blur(4px)",color:"#fff",fontSize:10,fontWeight:600,borderRadius:10,padding:"3px 10px",zIndex:1}}>{"\u23f1"} {item.prep}</div>}
       </div>
       <div style={{padding:"12px 14px 14px",flex:1}}>
         <div style={{fontSize:14,fontWeight:600,overflow:"hidden",display:"-webkit-box",WebkitLineClamp:2,WebkitBoxOrient:"vertical",color:"var(--text)",lineHeight:1.4}}>{item.local}</div>
@@ -246,7 +297,7 @@ export default function App() {
   const openCountry = useCallback(async (c) => {
     if (!apiKey) { setShowKeyInput(true); return; }
     setCountry(c); setMenu([]); setMenuError(null); setMenuLoading(true); setMenuDone(false); setScreen("menu");
-    const batches = [[1,10],[11,20],[21,30],[31,40],[41,50]];
+    const batches = [[1,10],[11,20],[21,30],[31,40],[41,50],[51,60],[61,70]];
     let errs = 0;
     await Promise.all(batches.map(([s,e]) =>
       apiFetch(`List exactly the dishes ranked #${s} to #${e} by menu popularity in ${c.name} (rank 1 = most common). Order strictly from rank ${s} down to ${e}. Include typical home prep time. Return ONLY a JSON array of exactly ${e-s+1} items, no markdown: [{"rank":${s},"local":"name in ${c.lang}","english":"English name","prep":"X mins"},...]`, 850, apiKey)
@@ -300,7 +351,7 @@ export default function App() {
           </div>
           <div style={{fontSize:56,marginBottom:16,filter:"drop-shadow(0 4px 16px rgba(0,0,0,.4))"}}>{"\ud83c\udf7d\ufe0f"}</div>
           <h1 className="fd" style={{fontSize:"clamp(30px, 6vw, 42px)",fontWeight:600,color:"#fff",margin:"0 0 12px",letterSpacing:"-1px",lineHeight:1.15}}>Global Menu Explorer</h1>
-          <p style={{fontSize:"clamp(14px, 2.5vw, 16px)",color:"rgba(255,255,255,.6)",margin:"0 auto 2rem",maxWidth:380,lineHeight:1.6}}>Discover the top 50 dishes from 12 countries, powered by AI</p>
+          <p style={{fontSize:"clamp(14px, 2.5vw, 16px)",color:"rgba(255,255,255,.6)",margin:"0 auto 2rem",maxWidth:380,lineHeight:1.6}}>Discover the top 70 dishes from 12 countries, powered by AI</p>
           <PillBtn onClick={()=>setShowCW(true)} style={{padding:"12px 28px",fontSize:14,background:"rgba(255,255,255,.08)",border:"1px solid rgba(255,255,255,.15)"}}>{"\ud83c\udfa1"} Help me pick a country</PillBtn>
         </div>
       </div>
@@ -337,8 +388,8 @@ export default function App() {
     <div className="app-container">
       {showShare && <ShareModal/>}
       {showDW && menu.length>0 && <SpinWheel items={menu} colors={WC} label="local" onResult={d=>{setShowDW(false);openDish(d);}} onClose={()=>setShowDW(false)}/>}
-      <HeaderBar grad={grad} onBack={()=>setScreen("home")} backLabel="Home" left={<div style={{display:"flex",alignItems:"center",gap:10,flex:1,minWidth:0}}><div style={{width:44,height:28,borderRadius:6,overflow:"hidden",border:"1px solid rgba(255,255,255,.2)",flexShrink:0}}><FlagSVG code={country.code}/></div><div style={{minWidth:0}}><h2 className="fd" style={{fontSize:"clamp(17px, 3vw, 22px)",fontWeight:600,margin:0,color:"#fff",letterSpacing:"-0.3px",whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>{country.name}</h2><p style={{fontSize:12,color:"rgba(255,255,255,.6)",margin:0}}>{menuDone?`Top ${menu.length} dishes`:`Loading\u2026 ${menu.length}/50`}</p></div></div>} right={<>{menu.length>0 && <PillBtn onClick={()=>setShowDW(true)}>{"\ud83c\udfa1"} Pick</PillBtn>}<PillBtn onClick={()=>setShowShare(true)}>{"\ud83d\udd17"} Share</PillBtn></>}/>
-      {menuLoading && menu.length===0 && (<div className="loading-pulse" style={{textAlign:"center",padding:"4rem 1.5rem"}}><div style={{fontSize:48,marginBottom:16}}>{"\ud83c\udf73"}</div><div className="fd" style={{fontSize:22,fontWeight:600,marginBottom:8,color:"var(--text)"}}>{"Loading menu\u2026"}</div><div style={{fontSize:14,color:"var(--text-muted)"}}>Fetching 5 batches in parallel</div></div>)}
+      <HeaderBar grad={grad} onBack={()=>setScreen("home")} backLabel="Home" left={<div style={{display:"flex",alignItems:"center",gap:10,flex:1,minWidth:0}}><div style={{width:44,height:28,borderRadius:6,overflow:"hidden",border:"1px solid rgba(255,255,255,.2)",flexShrink:0}}><FlagSVG code={country.code}/></div><div style={{minWidth:0}}><h2 className="fd" style={{fontSize:"clamp(17px, 3vw, 22px)",fontWeight:600,margin:0,color:"#fff",letterSpacing:"-0.3px",whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>{country.name}</h2><p style={{fontSize:12,color:"rgba(255,255,255,.6)",margin:0}}>{menuDone?`Top ${menu.length} dishes`:`Loading\u2026 ${menu.length}/70`}</p></div></div>} right={<>{menu.length>0 && <PillBtn onClick={()=>setShowDW(true)}>{"\ud83c\udfa1"} Pick</PillBtn>}<PillBtn onClick={()=>setShowShare(true)}>{"\ud83d\udd17"} Share</PillBtn></>}/>
+      {menuLoading && menu.length===0 && (<div className="loading-pulse" style={{textAlign:"center",padding:"4rem 1.5rem"}}><div style={{fontSize:48,marginBottom:16}}>{"\ud83c\udf73"}</div><div className="fd" style={{fontSize:22,fontWeight:600,marginBottom:8,color:"var(--text)"}}>{"Loading menu\u2026"}</div><div style={{fontSize:14,color:"var(--text-muted)"}}>Fetching 7 batches in parallel</div></div>)}
       {menuError && (<div className="fade-up" style={{margin:"12px 16px 0",padding:"12px 16px",background:"var(--warning-bg)",borderRadius:14,border:"1px solid var(--warning-border)",display:"flex",alignItems:"center",gap:10}}><span style={{fontSize:18}}>{"\u26a0\ufe0f"}</span><span style={{fontSize:13,color:"var(--warning-text)",fontWeight:500}}>{menuError}</span></div>)}
       {menu.length>0 && (<div style={{padding:16}}><div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(min(180px,calc(50% - 8px)),1fr))",gap:14}}>{menu.map((item,i)=>(<div key={item.rank} className="fade-up" style={{animationDelay:`${Math.min(i*30,300)}ms`}}><MenuCard item={item} ac={ac} onClick={()=>openDish(item)}/></div>))}</div></div>)}
     </div>
@@ -348,9 +399,9 @@ export default function App() {
     <div className="app-container">
       {showShare && <ShareModal/>}
       <HeaderBar grad={grad} onBack={()=>setScreen("menu")} backLabel="Menu" left={<div style={{display:"flex",alignItems:"center",gap:8,flex:1}}><div style={{width:36,height:22,borderRadius:4,overflow:"hidden",border:"1px solid rgba(255,255,255,.2)",flexShrink:0}}><FlagSVG code={country.code}/></div><span style={{fontSize:14,color:"rgba(255,255,255,.8)",fontWeight:500}}>{country.name}</span></div>} right={<PillBtn onClick={()=>setShowShare(true)}>{"\ud83d\udd17"} Share</PillBtn>}/>
-      <div style={{height:"clamp(200px, 35vw, 280px)",background:dishBg,display:"flex",alignItems:"center",justifyContent:"center",position:"relative"}}>
-        <div style={{fontSize:"clamp(72px, 15vw, 110px)",lineHeight:1,filter:"drop-shadow(0 4px 16px rgba(0,0,0,.15))"}}>{dishIcon}</div>
-        <div style={{position:"absolute",bottom:0,left:0,right:0,background:"linear-gradient(transparent,rgba(0,0,0,.6))",padding:"2.5rem 1.25rem 1.25rem"}}>
+      <div style={{height:"clamp(200px, 35vw, 280px)",background:dishBg,display:"flex",alignItems:"center",justifyContent:"center",position:"relative",overflow:"hidden"}}>
+        <DishImageFull english={dish.english} icon={dishIcon} bg={dishBg} />
+        <div style={{position:"absolute",bottom:0,left:0,right:0,background:"linear-gradient(transparent,rgba(0,0,0,.7))",padding:"2.5rem 1.25rem 1.25rem",zIndex:1}}>
           <h2 className="fd" style={{fontSize:"clamp(22px, 4vw, 30px)",fontWeight:600,margin:"0 0 4px",color:"#fff",letterSpacing:"-0.5px"}}>{dish.local}</h2>
           {dish.english!==dish.local && <p style={{fontSize:14,color:"rgba(255,255,255,.75)",margin:0}}>{dish.english}</p>}
         </div>
