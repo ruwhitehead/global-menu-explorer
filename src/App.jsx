@@ -157,12 +157,12 @@ const FlagSVG = memo(function FlagSVG({code}) {
   return null;
 });
 
-const AH = {"Content-Type":"application/json","anthropic-version":"2023-06-01","anthropic-dangerous-direct-browser-access":"true"};
 const reqCache = new Map();
-async function apiFetch(prompt, maxTok) {
+async function apiFetch(prompt, maxTok, apiKey) {
   if (reqCache.has(prompt)) return reqCache.get(prompt);
+  const headers = {"Content-Type":"application/json","anthropic-version":"2023-06-01","anthropic-dangerous-direct-browser-access":"true","x-api-key":apiKey};
   const p = fetch("https://api.anthropic.com/v1/messages",{
-    method:"POST",headers:AH,
+    method:"POST",headers,
     body:JSON.stringify({model:"claude-haiku-4-5-20251001",max_tokens:maxTok,messages:[{role:"user",content:prompt}]})
   }).then(async res=>{
     reqCache.delete(prompt);
@@ -217,6 +217,9 @@ export default function App() {
   const [showDW,setShowDW]   = useState(false);
   const [showShare,setShowShare] = useState(false);
   const [copied,setCopied]   = useState(false);
+  const [apiKey,setApiKey]   = useState(()=>localStorage.getItem("gme_api_key")||"");
+  const [showKeyInput,setShowKeyInput] = useState(false);
+  const saveKey = useCallback((k)=>{setApiKey(k);localStorage.setItem("gme_api_key",k);setShowKeyInput(false);},[]);
 
   const ac   = country?.color || "#c0392b";
   const ac2  = country ? (["#4caf50","#8B0000"].includes(country.accent) ? country.color : country.accent) : "#7b1a0e";
@@ -258,7 +261,8 @@ export default function App() {
         `Order strictly from rank ${s} down to ${e}. Include typical home prep time. `+
         `Return ONLY a JSON array of exactly ${e-s+1} items, no markdown: `+
         `[{"rank":${s},"local":"name in ${c.lang}","english":"English name","prep":"X mins"},...]`,
-        850
+        850,
+        apiKey
       ).then(raw => {
         try {
           const items = xj(raw,"array").map((it,i)=>({...it,rank:s+i}));
@@ -279,7 +283,8 @@ export default function App() {
       const raw = await apiFetch(
         `BBC Good Food style recipe for "${d.english}" from ${country.name}. `+
         `Return ONLY a JSON object, no markdown: {"description":"2 sentences","ingredients":["qty ingredient",...max 10],"prep_time":"X mins","cook_time":"X mins","steps":["step",...max 6]}`,
-        1200
+        1200,
+        apiKey
       );
       setDetail(xj(raw,"object"));
     } catch { setDetail({description:"Could not load recipe.",ingredients:[],prep_time:"-",cook_time:"-",steps:[]}); }
@@ -327,12 +332,23 @@ export default function App() {
       {showShare && <ShareModal/>}
       {showCW && <SpinWheel items={COUNTRIES} colors={WC} label="name" onResult={c=>{setShowCW(false);openCountry(c);}} onClose={()=>setShowCW(false)}/>}
       <div style={{background:"linear-gradient(135deg,#c0392b,#7b1a0e)",padding:"2.5rem 1.5rem 2rem",textAlign:"center",position:"relative"}}>
-        <div style={{position:"absolute",top:16,right:16}}><ShareBtn/></div>
+        <div style={{position:"absolute",top:16,right:16,display:"flex",gap:6}}>{apiKey && <button onClick={()=>setShowKeyInput(true)} style={{background:"rgba(255,255,255,.18)",border:"1px solid rgba(255,255,255,.4)",borderRadius:20,padding:"6px 14px",color:"#fff",fontSize:12,fontWeight:600,cursor:"pointer",whiteSpace:"nowrap"}}>🔑 Key</button>}<ShareBtn/></div>
         <div style={{fontSize:44,marginBottom:10}}>🍽️</div>
         <h1 className="fd" style={{fontSize:32,fontWeight:600,color:"#fff",margin:"0 0 8px",letterSpacing:"-0.5px"}}>Global Menu Explorer</h1>
         <p style={{fontSize:15,color:"rgba(255,255,255,.8)",margin:"0 0 1.5rem"}}>Discover authentic dishes from around the world</p>
         <button onClick={()=>setShowCW(true)} style={{background:"rgba(255,255,255,.15)",border:"1.5px solid rgba(255,255,255,.5)",borderRadius:50,padding:"10px 24px",color:"#fff",fontSize:14,fontWeight:600,cursor:"pointer"}}>🎡 Help me pick a country</button>
       </div>
+      {(!apiKey || showKeyInput) && (
+        <div style={{margin:"1rem 1rem 0",padding:"1.25rem",background:"var(--color-background-primary)",borderRadius:16,border:"0.5px solid var(--color-border-tertiary)"}}>
+          <h3 style={{fontSize:15,fontWeight:600,margin:"0 0 6px",color:"var(--color-text-primary)"}}>{apiKey?"Update API Key":"🔑 Enter your Anthropic API Key"}</h3>
+          <p style={{fontSize:13,color:"var(--color-text-secondary)",margin:"0 0 12px",lineHeight:1.5}}>Required to load menus and recipes. Your key is stored only in this browser.</p>
+          <form onSubmit={e=>{e.preventDefault();const v=e.target.elements.key.value.trim();if(v)saveKey(v);}} style={{display:"flex",gap:8}}>
+            <input name="key" type="password" defaultValue={apiKey} placeholder="sk-ant-api03-..." style={{flex:1,padding:"10px 14px",borderRadius:10,border:"1.5px solid var(--color-border-tertiary)",fontSize:14,background:"var(--color-background-secondary)",color:"var(--color-text-primary)",fontFamily:"monospace"}}/>
+            <button type="submit" style={{padding:"10px 20px",borderRadius:10,border:"none",background:"#c0392b",color:"#fff",fontSize:14,fontWeight:600,cursor:"pointer",whiteSpace:"nowrap"}}>Save</button>
+            {apiKey && showKeyInput && <button type="button" onClick={()=>setShowKeyInput(false)} style={{padding:"10px 14px",borderRadius:10,border:"0.5px solid var(--color-border-tertiary)",background:"none",fontSize:14,cursor:"pointer",color:"var(--color-text-secondary)"}}>Cancel</button>}
+          </form>
+        </div>
+      )}
       <div style={{padding:"1.5rem 1rem 2rem"}}>
         <p style={{fontSize:12,color:"var(--color-text-secondary)",textAlign:"center",margin:"0 0 1.25rem",letterSpacing:".5px",textTransform:"uppercase",fontWeight:600}}>Choose a country</p>
         <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(148px,1fr))",gap:12}}>
