@@ -4,28 +4,28 @@ function useFonts() {
   useEffect(() => {
     const l = document.createElement("link");
     l.rel = "stylesheet"; l.media = "print";
-    l.href = "https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&family=Fraunces:opsz,wght@9..144,600&display=swap";
+    l.href = "https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,600;1,600&display=swap";
     l.onload = () => { l.media = "all"; };
     document.head.appendChild(l);
     const s = document.createElement("style");
-    s.textContent = `*{font-family:'Outfit',system-ui,sans-serif!important}.fd{font-family:'Fraunces',serif!important}`;
+    s.textContent = `*{font-family:'Outfit',system-ui,sans-serif!important}.fd{font-family:'Playfair Display',serif!important}`;
     document.head.appendChild(s);
   }, []);
 }
 
 const COUNTRIES = [
-  { code:"FR", name:"France",         lang:"French",         color:"#002395", accent:"#ED2939" },
-  { code:"IT", name:"Italy",          lang:"Italian",        color:"#008C45", accent:"#CE2B37" },
-  { code:"DE", name:"Germany",        lang:"German",         color:"#444",    accent:"#DD0000" },
-  { code:"ES", name:"Spain",          lang:"Spanish",        color:"#AA151B", accent:"#F1BF00" },
-  { code:"CN", name:"China",          lang:"Chinese",        color:"#DE2910", accent:"#FFDE00" },
-  { code:"BR", name:"Brazil",         lang:"Portuguese",     color:"#009C3B", accent:"#FFDF00" },
-  { code:"NG", name:"Nigeria",        lang:"English/Yoruba", color:"#008751", accent:"#4caf50" },
-  { code:"TH", name:"Thailand",       lang:"Thai",           color:"#A51931", accent:"#2D2A4A" },
-  { code:"PL", name:"Poland",         lang:"Polish",         color:"#DC143C", accent:"#8B0000" },
-  { code:"VN", name:"Vietnam",        lang:"Vietnamese",     color:"#DA251D", accent:"#FFCD00" },
-  { code:"GB", name:"United Kingdom", lang:"English",        color:"#012169", accent:"#C8102E" },
-  { code:"IN", name:"India",          lang:"Hindi/Regional", color:"#FF9933", accent:"#138808" },
+  { code:"FR", flag:"fr", name:"France",         lang:"French",         color:"#002395", accent:"#ED2939" },
+  { code:"IT", flag:"it", name:"Italy",          lang:"Italian",        color:"#008C45", accent:"#CE2B37" },
+  { code:"DE", flag:"de", name:"Germany",        lang:"German",         color:"#444",    accent:"#DD0000" },
+  { code:"ES", flag:"es", name:"Spain",          lang:"Spanish",        color:"#AA151B", accent:"#F1BF00" },
+  { code:"CN", flag:"cn", name:"China",          lang:"Chinese",        color:"#DE2910", accent:"#FFDE00" },
+  { code:"BR", flag:"br", name:"Brazil",         lang:"Portuguese",     color:"#009C3B", accent:"#FFDF00" },
+  { code:"NG", flag:"ng", name:"Nigeria",        lang:"English/Yoruba", color:"#008751", accent:"#4caf50" },
+  { code:"TH", flag:"th", name:"Thailand",       lang:"Thai",           color:"#A51931", accent:"#2D2A4A" },
+  { code:"PL", flag:"pl", name:"Poland",         lang:"Polish",         color:"#DC143C", accent:"#8B0000" },
+  { code:"VN", flag:"vn", name:"Vietnam",        lang:"Vietnamese",     color:"#DA251D", accent:"#FFCD00" },
+  { code:"GB", flag:"gb", name:"United Kingdom", lang:"English",        color:"#012169", accent:"#C8102E" },
+  { code:"IN", flag:"in", name:"India",          lang:"Hindi/Regional", color:"#FF9933", accent:"#138808" },
 ];
 
 const WC = ["#e74c3c","#e67e22","#f1c40f","#2ecc71","#1abc9c","#3498db","#9b59b6","#e91e63","#00bcd4","#ff5722","#8bc34a","#ff9800"];
@@ -63,7 +63,7 @@ function getDishStyle(local, english) {
   return fallback;
 }
 
-/* Wikipedia image fetcher — free, no API key needed */
+/* Wikipedia image fetcher */
 const wikiImgCache = new Map();
 async function fetchWikiImage(dishName) {
   if (wikiImgCache.has(dishName)) return wikiImgCache.get(dishName);
@@ -80,6 +80,53 @@ async function fetchWikiImage(dishName) {
   })();
   wikiImgCache.set(dishName, p);
   return p;
+}
+
+/* Flag component using flagcdn.com */
+function CountryFlag({ code, size=64, style:sx={} }) {
+  const lc = code.toLowerCase();
+  return (
+    <div style={{width:size*1.5,height:size,borderRadius:8,overflow:"hidden",background:"#1e293b",display:"flex",alignItems:"center",justifyContent:"center",boxShadow:"0 4px 16px rgba(0,0,0,.25)",border:"2px solid rgba(255,255,255,.15)",...sx}}>
+      <img src={`https://flagcdn.com/w320/${lc}.png`} alt={code} style={{width:"100%",height:"100%",objectFit:"cover"}} />
+    </div>
+  );
+}
+
+/* Smaller flag for headers */
+function FlagSmall({ code, w=44 }) {
+  const lc = code.toLowerCase();
+  return (
+    <div style={{width:w,height:w*0.667,borderRadius:4,overflow:"hidden",border:"1px solid rgba(255,255,255,.2)",flexShrink:0}}>
+      <img src={`https://flagcdn.com/w160/${lc}.png`} alt={code} style={{width:"100%",height:"100%",objectFit:"cover"}} />
+    </div>
+  );
+}
+
+/* Hero SVG — compass rose */
+function HeroIcon() {
+  return (
+    <svg viewBox="0 0 100 100" width="80" height="80" style={{filter:"drop-shadow(0 4px 20px rgba(255,200,150,.3))"}}>
+      <circle cx="50" cy="50" r="46" fill="none" stroke="rgba(255,255,255,.15)" strokeWidth="1"/>
+      <circle cx="50" cy="50" r="38" fill="none" stroke="rgba(255,255,255,.1)" strokeWidth="0.5"/>
+      {/* compass points */}
+      <polygon points="50,8 54,44 50,40 46,44" fill="rgba(255,200,150,.9)"/>
+      <polygon points="50,92 54,56 50,60 46,56" fill="rgba(255,255,255,.4)"/>
+      <polygon points="8,50 44,46 40,50 44,54" fill="rgba(255,255,255,.4)"/>
+      <polygon points="92,50 56,46 60,50 56,54" fill="rgba(255,255,255,.4)"/>
+      {/* diagonal points */}
+      <polygon points="21,21 43,45 40,43 42,40" fill="rgba(255,255,255,.2)"/>
+      <polygon points="79,21 57,45 60,43 58,40" fill="rgba(255,255,255,.2)"/>
+      <polygon points="21,79 43,55 40,57 42,60" fill="rgba(255,255,255,.2)"/>
+      <polygon points="79,79 57,55 60,57 58,60" fill="rgba(255,255,255,.2)"/>
+      <circle cx="50" cy="50" r="4" fill="rgba(255,200,150,.8)"/>
+      <circle cx="50" cy="50" r="2" fill="#fff"/>
+      {/* N E S W labels */}
+      <text x="50" y="6" textAnchor="middle" fill="rgba(255,200,150,.9)" fontSize="7" fontWeight="700" fontFamily="'Playfair Display',serif">N</text>
+      <text x="50" y="99" textAnchor="middle" fill="rgba(255,255,255,.35)" fontSize="7" fontWeight="700" fontFamily="'Playfair Display',serif">S</text>
+      <text x="4" y="52.5" textAnchor="middle" fill="rgba(255,255,255,.35)" fontSize="7" fontWeight="700" fontFamily="'Playfair Display',serif">W</text>
+      <text x="96" y="52.5" textAnchor="middle" fill="rgba(255,255,255,.35)" fontSize="7" fontWeight="700" fontFamily="'Playfair Display',serif">E</text>
+    </svg>
+  );
 }
 
 function SpinWheel({ items, colors, onResult, onClose, label="name" }) {
@@ -136,7 +183,7 @@ function SpinWheel({ items, colors, onResult, onClose, label="name" }) {
         <div style={{display:"flex",gap:10,marginTop:"1.25rem"}}>
           <button onClick={onClose} style={{flex:1,padding:"12px",borderRadius:14,border:"1px solid var(--border)",background:"transparent",cursor:"pointer",fontSize:14,color:"var(--text-secondary)",fontWeight:500}}>Cancel</button>
           {winner
-            ? <button onClick={()=>onResult(winner)} style={{flex:2,padding:"12px",borderRadius:14,border:"none",background:"var(--accent)",color:"#fff",cursor:"pointer",fontSize:14,fontWeight:600}}>{"\u2019s go!"}</button>
+            ? <button onClick={()=>onResult(winner)} style={{flex:2,padding:"12px",borderRadius:14,border:"none",background:"var(--accent)",color:"#fff",cursor:"pointer",fontSize:14,fontWeight:600}}>{"Let\u2019s go!"}</button>
             : <button onClick={spin} disabled={spinning} style={{flex:2,padding:"12px",borderRadius:14,border:"none",background:spinning?"var(--border)":"var(--accent)",color:spinning?"var(--text-muted)":"#fff",cursor:spinning?"not-allowed":"pointer",fontSize:14,fontWeight:600}}>{spinning?"Spinning\u2026":"Spin!"}</button>}
         </div>
         {winner && <button onClick={spin} style={{marginTop:10,width:"100%",padding:"10px",borderRadius:14,border:"1px solid var(--border)",background:"transparent",cursor:"pointer",fontSize:13,color:"var(--text-secondary)",fontWeight:500}}>Spin again</button>}
@@ -144,26 +191,6 @@ function SpinWheel({ items, colors, onResult, onClose, label="name" }) {
     </div>
   );
 }
-
-const FlagSVG = memo(function FlagSVG({code}) {
-  if (code==="FR") return <svg viewBox="0 0 3 2" style={{width:"100%",height:"100%"}}><rect width="1" height="2" fill="#002395"/><rect x="1" width="1" height="2" fill="#fff"/><rect x="2" width="1" height="2" fill="#ED2939"/></svg>;
-  if (code==="IT") return <svg viewBox="0 0 3 2" style={{width:"100%",height:"100%"}}><rect width="1" height="2" fill="#009246"/><rect x="1" width="1" height="2" fill="#fff"/><rect x="2" width="1" height="2" fill="#CE2B37"/></svg>;
-  if (code==="DE") return <svg viewBox="0 0 5 3" style={{width:"100%",height:"100%"}}><rect width="5" height="1" fill="#000"/><rect y="1" width="5" height="1" fill="#D00"/><rect y="2" width="5" height="1" fill="#FFCE00"/></svg>;
-  if (code==="ES") return <svg viewBox="0 0 3 2" style={{width:"100%",height:"100%"}}><rect width="3" height="2" fill="#AA151B"/><rect y="0.5" width="3" height="1" fill="#F1BF00"/></svg>;
-  if (code==="CN") return <svg viewBox="0 0 30 20" style={{width:"100%",height:"100%"}}><rect width="30" height="20" fill="#DE2910"/><polygon points="5,2 6.18,5.09 9.51,5.09 6.9,7.18 7.94,10.27 5,8.35 2.06,10.27 3.1,7.18 0.49,5.09 3.82,5.09" fill="#FFDE00"/><polygon points="11,1 11.59,2.81 13.39,2.81 11.99,3.93 12.54,5.74 11,4.62 9.46,5.74 10.01,3.93 8.61,2.81 10.41,2.81" fill="#FFDE00"/><polygon points="14,3.5 14.59,5.31 16.39,5.31 14.99,6.43 15.54,8.24 14,7.12 12.46,8.24 13.01,6.43 11.61,5.31 13.41,5.31" fill="#FFDE00"/><polygon points="14,7.5 14.59,9.31 16.39,9.31 14.99,10.43 15.54,12.24 14,11.12 12.46,12.24 13.01,10.43 11.61,9.31 13.41,9.31" fill="#FFDE00"/><polygon points="11,10 11.59,11.81 13.39,11.81 11.99,12.93 12.54,14.74 11,13.62 9.46,14.74 10.01,12.93 8.61,11.81 10.41,11.81" fill="#FFDE00"/></svg>;
-  if (code==="BR") return <svg viewBox="0 0 20 14" style={{width:"100%",height:"100%"}}><rect width="20" height="14" fill="#009C3B"/><polygon points="10,1.5 18.5,7 10,12.5 1.5,7" fill="#FFDF00"/><circle cx="10" cy="7" r="2.8" fill="#002776"/><path d="M7.3,6.4 Q10,5 12.7,6.4" stroke="#fff" strokeWidth="0.5" fill="none"/></svg>;
-  if (code==="NG") return <svg viewBox="0 0 3 2" style={{width:"100%",height:"100%"}}><rect width="1" height="2" fill="#008751"/><rect x="1" width="1" height="2" fill="#fff"/><rect x="2" width="1" height="2" fill="#008751"/></svg>;
-  if (code==="TH") return <svg viewBox="0 0 6 4" style={{width:"100%",height:"100%"}}><rect width="6" height="4" fill="#A51931"/><rect y="0.667" width="6" height="2.667" fill="#fff"/><rect y="1.333" width="6" height="1.333" fill="#2D2A4A"/></svg>;
-  if (code==="PL") return <svg viewBox="0 0 8 5" style={{width:"100%",height:"100%"}}><rect width="8" height="2.5" fill="#fff"/><rect y="2.5" width="8" height="2.5" fill="#DC143C"/></svg>;
-  if (code==="VN") return <svg viewBox="0 0 3 2" style={{width:"100%",height:"100%"}}><rect width="3" height="2" fill="#DA251D"/><polygon points="1.5,0.35 1.676,0.89 2.244,0.89 1.784,1.22 1.96,1.76 1.5,1.43 1.04,1.76 1.216,1.22 0.756,0.89 1.324,0.89" fill="#FFCD00"/></svg>;
-  if (code==="GB") return <svg viewBox="0 0 60 30" style={{width:"100%",height:"100%"}}><rect width="60" height="30" fill="#012169"/><line x1="0" y1="0" x2="60" y2="30" stroke="#fff" strokeWidth="6"/><line x1="60" y1="0" x2="0" y2="30" stroke="#fff" strokeWidth="6"/><line x1="0" y1="0" x2="60" y2="30" stroke="#C8102E" strokeWidth="2"/><line x1="60" y1="0" x2="0" y2="30" stroke="#C8102E" strokeWidth="2"/><rect x="25" y="0" width="10" height="30" fill="#fff"/><rect x="0" y="10" width="60" height="10" fill="#fff"/><rect x="27" y="0" width="6" height="30" fill="#C8102E"/><rect x="0" y="12" width="60" height="6" fill="#C8102E"/></svg>;
-  if (code==="IN") {
-    const sp=[];
-    for(let i=0;i<24;i++){const a=(i*15)*Math.PI/180;sp.push(<line key={i} x1={4.5+0.12*Math.cos(a)} y1={3+0.12*Math.sin(a)} x2={4.5+0.72*Math.cos(a)} y2={3+0.72*Math.sin(a)} stroke="#000080" strokeWidth="0.05"/>);}
-    return <svg viewBox="0 0 9 6" style={{width:"100%",height:"100%"}}><rect width="9" height="2" fill="#FF9933"/><rect y="2" width="9" height="2" fill="#fff"/><rect y="4" width="9" height="2" fill="#138808"/><circle cx="4.5" cy="3" r="0.75" fill="none" stroke="#000080" strokeWidth="0.12"/><circle cx="4.5" cy="3" r="0.1" fill="#000080"/>{sp}</svg>;
-  }
-  return null;
-});
 
 const reqCache = new Map();
 async function apiFetch(prompt, maxTok, apiKey) {
@@ -174,7 +201,7 @@ async function apiFetch(prompt, maxTok, apiKey) {
     body:JSON.stringify({model:"claude-haiku-4-5-20251001",max_tokens:maxTok,messages:[{role:"user",content:prompt}]})
   }).then(async res=>{
     reqCache.delete(prompt);
-    if(!res.ok){const e=await res.json().catch(()=>{});throw new Error(e?.error?.message||"HTTP "+res.status);}
+    if(!res.ok){const e=await res.json().catch(()=>({}));throw new Error(e?.error?.message||"HTTP "+res.status);}
     return (await res.json()).content.map(b=>b.text||"").join("");
   }).catch(e=>{reqCache.delete(prompt);throw e;});
   reqCache.set(prompt, p);
@@ -193,8 +220,7 @@ function PillBtn({ children, onClick, style:sx={} }) {
   return (<button onClick={onClick} style={{display:"inline-flex",alignItems:"center",gap:6,padding:"8px 18px",borderRadius:50,fontSize:13,fontWeight:600,cursor:"pointer",transition:"all 0.2s",whiteSpace:"nowrap",background:"rgba(255,255,255,.12)",color:"#fff",border:"1px solid rgba(255,255,255,.2)",backdropFilter:"blur(4px)",...sx}}>{children}</button>);
 }
 
-/* DishImage: shows wiki photo with emoji fallback */
-function DishImage({ english, icon, bg, style, imgStyle }) {
+function DishImage({ english, icon, bg }) {
   const [src, setSrc] = useState(null);
   const [err, setErr] = useState(false);
   useEffect(() => {
@@ -203,12 +229,11 @@ function DishImage({ english, icon, bg, style, imgStyle }) {
     return () => { cancelled = true; };
   }, [english]);
   if (src && !err) {
-    return <img src={src} alt={english} onError={() => setErr(true)} style={{width:"100%",height:"100%",objectFit:"cover",...imgStyle}} />;
+    return <img src={src} alt={english} onError={() => setErr(true)} style={{width:"100%",height:"100%",objectFit:"cover"}} />;
   }
-  return <div style={{width:"100%",height:"100%",background:bg,display:"flex",alignItems:"center",justifyContent:"center",...style}}><span style={{fontSize:44}}>{icon}</span></div>;
+  return <div style={{width:"100%",height:"100%",background:bg,display:"flex",alignItems:"center",justifyContent:"center"}}><span style={{fontSize:44}}>{icon}</span></div>;
 }
 
-/* DishImageFull: bigger image for detail view */
 function DishImageFull({ english, icon, bg }) {
   const [src, setSrc] = useState(null);
   const [err, setErr] = useState(false);
@@ -255,6 +280,186 @@ function HeaderBar({ grad, onBack, backLabel, left, right }) {
   );
 }
 
+/* ─── Quiz component ─── */
+function MenuQuiz({ apiKey, onClose }) {
+  const [phase, setPhase] = useState("pick"); // pick | loading | play | result
+  const [qCountry, setQCountry] = useState(null);
+  const [dishes, setDishes] = useState([]);
+  const [idx, setIdx] = useState(0);
+  const [answer, setAnswer] = useState("");
+  const [revealed, setRevealed] = useState(false);
+  const [results, setResults] = useState([]); // {local,english,answer,correct}
+  const [loadErr, setLoadErr] = useState(null);
+  const inputRef = useRef(null);
+
+  const startQuiz = useCallback(async (c) => {
+    setQCountry(c); setPhase("loading"); setLoadErr(null);
+    try {
+      const raw = await apiFetch(
+        `List 15 popular dishes from ${c.name}. Each must have a distinct local-language name (in ${c.lang}) that differs from the English name. Return ONLY a JSON array, no markdown: [{"local":"name in ${c.lang}","english":"English name"},...]`,
+        600, apiKey
+      );
+      const all = xj(raw, "array").filter(d => d.local && d.english && d.local.toLowerCase() !== d.english.toLowerCase());
+      if (all.length < 10) throw new Error("Not enough dishes returned");
+      // shuffle and take 10
+      for (let i = all.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [all[i], all[j]] = [all[j], all[i]]; }
+      setDishes(all.slice(0, 10));
+      setIdx(0); setAnswer(""); setRevealed(false); setResults([]);
+      setPhase("play");
+    } catch (e) {
+      setLoadErr(e.message || "Failed to load quiz dishes");
+      setPhase("pick");
+    }
+  }, [apiKey]);
+
+  useEffect(() => {
+    if (phase === "play" && !revealed && inputRef.current) inputRef.current.focus();
+  }, [phase, idx, revealed]);
+
+  function checkAnswer() {
+    if (revealed) return;
+    const eng = dishes[idx].english.toLowerCase().trim();
+    const ans = answer.toLowerCase().trim();
+    const correct = ans === eng || eng.includes(ans) && ans.length > 2;
+    setResults(prev => [...prev, { local: dishes[idx].local, english: dishes[idx].english, answer, correct }]);
+    setRevealed(true);
+  }
+
+  function next() {
+    if (idx + 1 >= 10) { setPhase("result"); return; }
+    setIdx(i => i + 1); setAnswer(""); setRevealed(false);
+  }
+
+  const score = results.filter(r => r.correct).length;
+
+  if (phase === "pick") return (
+    <div className="app-container">
+      <div style={{background:"linear-gradient(135deg,#1a1a2e,#16213e,#0f3460)",padding:"2rem 1.5rem",textAlign:"center"}}>
+        <button onClick={onClose} style={{position:"absolute",top:16,left:16,background:"rgba(255,255,255,.12)",border:"1px solid rgba(255,255,255,.15)",borderRadius:12,padding:"7px 14px",cursor:"pointer",fontSize:13,color:"#fff",fontWeight:500}}>{"\u2190"} Home</button>
+        <div style={{fontSize:40,marginBottom:12}}>{"?"}</div>
+        <h2 className="fd" style={{fontSize:"clamp(24px,5vw,34px)",color:"#fff",margin:"0 0 8px",fontStyle:"italic"}}>Can You Navigate a Menu?</h2>
+        <p style={{fontSize:14,color:"rgba(255,255,255,.55)",margin:0}}>Pick a country to test your knowledge</p>
+      </div>
+      {loadErr && <div className="fade-up" style={{margin:"12px 16px",padding:"12px 16px",background:"var(--warning-bg)",borderRadius:14,border:"1px solid var(--warning-border)",fontSize:13,color:"var(--warning-text)"}}>{loadErr}</div>}
+      <div style={{padding:"24px 16px"}}>
+        <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(min(155px,calc(50% - 8px)),1fr))",gap:12}}>
+          {COUNTRIES.filter(c => c.lang !== "English" && c.lang !== "English/Yoruba").map(c => (
+            <button key={c.code} onClick={() => startQuiz(c)} style={{background:"var(--bg-card)",border:"1px solid var(--border)",borderRadius:16,padding:"16px 12px",cursor:"pointer",textAlign:"center",transition:"all 0.2s"}}
+              onMouseEnter={e=>{e.currentTarget.style.borderColor=c.color;e.currentTarget.style.transform="translateY(-2px)";}}
+              onMouseLeave={e=>{e.currentTarget.style.borderColor="var(--border)";e.currentTarget.style.transform="translateY(0)";}}>
+              <CountryFlag code={c.code} size={36} style={{margin:"0 auto 10px",boxShadow:"0 2px 8px rgba(0,0,0,.15)",border:"1px solid rgba(0,0,0,.1)"}} />
+              <div style={{fontSize:14,fontWeight:600,color:"var(--text)"}}>{c.name}</div>
+            </button>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+
+  if (phase === "loading") return (
+    <div className="app-container">
+      <div style={{display:"flex",alignItems:"center",justifyContent:"center",minHeight:"60vh",flexDirection:"column",gap:16}}>
+        <div className="loading-pulse" style={{fontSize:48}}>{"?"}</div>
+        <div className="fd" style={{fontSize:22,color:"var(--text)"}}>Preparing your quiz...</div>
+        <p style={{fontSize:14,color:"var(--text-muted)"}}>{qCountry?.name} menu challenge</p>
+      </div>
+    </div>
+  );
+
+  if (phase === "play") {
+    const d = dishes[idx];
+    return (
+      <div className="app-container">
+        <div style={{background:`linear-gradient(135deg,${qCountry.color},${qCountry.accent||qCountry.color}cc)`,padding:"1.25rem 1.5rem",display:"flex",alignItems:"center",justifyContent:"space-between"}}>
+          <div style={{display:"flex",alignItems:"center",gap:10}}>
+            <FlagSmall code={qCountry.code} w={36} />
+            <span style={{color:"#fff",fontSize:14,fontWeight:600}}>{qCountry.name} Quiz</span>
+          </div>
+          <div style={{background:"rgba(255,255,255,.15)",borderRadius:20,padding:"4px 14px",fontSize:13,color:"#fff",fontWeight:600}}>{idx + 1} / 10</div>
+        </div>
+        <div style={{padding:"2rem 1.5rem",textAlign:"center"}}>
+          {/* Progress bar */}
+          <div style={{width:"100%",height:4,background:"var(--border)",borderRadius:2,marginBottom:"2rem",overflow:"hidden"}}>
+            <div style={{width:`${(idx/10)*100}%`,height:"100%",background:qCountry.color,borderRadius:2,transition:"width 0.3s"}}/>
+          </div>
+          <p style={{fontSize:12,color:"var(--text-muted)",textTransform:"uppercase",letterSpacing:"2px",fontWeight:600,marginBottom:8}}>What is this dish in English?</p>
+          <div className="fd fade-up" key={idx} style={{fontSize:"clamp(32px,7vw,48px)",fontWeight:600,color:"var(--text)",margin:"0 0 2rem",fontStyle:"italic",lineHeight:1.3}}>{d.local}</div>
+
+          {!revealed ? (
+            <form onSubmit={e => { e.preventDefault(); checkAnswer(); }} style={{maxWidth:360,margin:"0 auto"}}>
+              <input ref={inputRef} value={answer} onChange={e => setAnswer(e.target.value)} placeholder="Type the English name..." autoComplete="off"
+                style={{width:"100%",padding:"14px 18px",borderRadius:16,border:"2px solid var(--border)",fontSize:16,background:"var(--bg-secondary)",color:"var(--text)",textAlign:"center",marginBottom:12}} />
+              <button type="submit" disabled={!answer.trim()} style={{width:"100%",padding:"14px",borderRadius:16,border:"none",background:answer.trim()?qCountry.color:"var(--border)",color:answer.trim()?"#fff":"var(--text-muted)",fontSize:15,fontWeight:600,cursor:answer.trim()?"pointer":"not-allowed",transition:"all 0.2s"}}>Check Answer</button>
+              <button type="button" onClick={() => { setAnswer(""); checkAnswer(); }} style={{marginTop:8,width:"100%",padding:"10px",borderRadius:12,border:"1px solid var(--border)",background:"transparent",cursor:"pointer",fontSize:13,color:"var(--text-muted)"}}>Skip</button>
+            </form>
+          ) : (
+            <div className="fade-up" style={{maxWidth:360,margin:"0 auto"}}>
+              {results[results.length - 1]?.correct ? (
+                <div style={{background:"#dcfce7",border:"2px solid #86efac",borderRadius:20,padding:"1.5rem",marginBottom:16}}>
+                  <div style={{fontSize:36,marginBottom:8}}>{"Correct!"}</div>
+                  <div style={{fontSize:18,fontWeight:600,color:"#166534"}}>{d.english}</div>
+                </div>
+              ) : (
+                <div style={{background:"#fef2f2",border:"2px solid #fca5a5",borderRadius:20,padding:"1.5rem",marginBottom:16}}>
+                  <div style={{fontSize:20,fontWeight:600,color:"#991b1b",marginBottom:8}}>Not quite</div>
+                  {answer.trim() && <div style={{fontSize:14,color:"#b91c1c",marginBottom:8}}>You said: <strong>{answer}</strong></div>}
+                  <div style={{fontSize:18,fontWeight:700,color:"#166534"}}>Answer: {d.english}</div>
+                </div>
+              )}
+              <button onClick={next} style={{width:"100%",padding:"14px",borderRadius:16,border:"none",background:qCountry.color,color:"#fff",fontSize:15,fontWeight:600,cursor:"pointer"}}>
+                {idx + 1 >= 10 ? "See Results" : "Next Question \u2192"}
+              </button>
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  }
+
+  if (phase === "result") {
+    const pct = Math.round((score / 10) * 100);
+    const grade = pct >= 80 ? "Menu Master!" : pct >= 50 ? "Getting There!" : "Keep Exploring!";
+    const gradeColor = pct >= 80 ? "#16a34a" : pct >= 50 ? "#ea580c" : "#dc2626";
+    return (
+      <div className="app-container">
+        <div style={{background:`linear-gradient(135deg,${qCountry.color},${qCountry.accent||qCountry.color}cc)`,padding:"2.5rem 1.5rem",textAlign:"center"}}>
+          <CountryFlag code={qCountry.code} size={40} style={{margin:"0 auto 16px"}} />
+          <h2 className="fd" style={{fontSize:28,color:"#fff",margin:"0 0 4px",fontStyle:"italic"}}>{qCountry.name} Quiz</h2>
+          <p style={{fontSize:14,color:"rgba(255,255,255,.6)",margin:0}}>Results</p>
+        </div>
+        <div className="fade-up" style={{padding:"24px 16px"}}>
+          {/* Score circle */}
+          <div style={{textAlign:"center",marginBottom:24}}>
+            <div style={{width:120,height:120,borderRadius:"50%",border:`6px solid ${gradeColor}`,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",margin:"0 auto 12px"}}>
+              <div style={{fontSize:36,fontWeight:700,color:gradeColor}}>{score}</div>
+              <div style={{fontSize:12,color:"var(--text-muted)"}}>out of 10</div>
+            </div>
+            <div className="fd" style={{fontSize:22,fontWeight:600,color:gradeColor,fontStyle:"italic"}}>{grade}</div>
+          </div>
+          {/* Results breakdown */}
+          <div style={{background:"var(--bg-card)",border:"1px solid var(--border)",borderRadius:20,padding:"4px 0",marginBottom:20}}>
+            {results.map((r, i) => (
+              <div key={i} style={{display:"flex",alignItems:"center",gap:12,padding:"12px 18px",borderBottom:i<9?"1px solid var(--border-light)":"none"}}>
+                <div style={{width:28,height:28,borderRadius:"50%",background:r.correct?"#dcfce7":"#fef2f2",display:"flex",alignItems:"center",justifyContent:"center",fontSize:14,flexShrink:0}}>{r.correct ? "\u2713" : "\u2717"}</div>
+                <div style={{flex:1,minWidth:0}}>
+                  <div style={{fontSize:14,fontWeight:600,color:"var(--text)"}}>{r.local}</div>
+                  <div style={{fontSize:12,color:"var(--text-muted)"}}>{r.english}{r.answer && !r.correct ? ` (you: ${r.answer})` : ""}</div>
+                </div>
+              </div>
+            ))}
+          </div>
+          <div style={{display:"flex",gap:10}}>
+            <button onClick={() => { setPhase("pick"); setResults([]); setIdx(0); }} style={{flex:1,padding:"14px",borderRadius:16,border:"1px solid var(--border)",background:"transparent",cursor:"pointer",fontSize:14,fontWeight:600,color:"var(--text-secondary)"}}>Try Another</button>
+            <button onClick={onClose} style={{flex:1,padding:"14px",borderRadius:16,border:"none",background:"var(--accent)",color:"#fff",cursor:"pointer",fontSize:14,fontWeight:600}}>Home</button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  return null;
+}
+
 export default function App() {
   useFonts();
   const [screen,setScreen] = useState("home");
@@ -299,12 +504,15 @@ export default function App() {
     setCountry(c); setMenu([]); setMenuError(null); setMenuLoading(true); setMenuDone(false); setScreen("menu");
     const batches = [[1,10],[11,20],[21,30],[31,40],[41,50],[51,60],[61,70]];
     let errs = 0;
-    await Promise.all(batches.map(([s,e]) =>
-      apiFetch(`List exactly the dishes ranked #${s} to #${e} by menu popularity in ${c.name} (rank 1 = most common). Order strictly from rank ${s} down to ${e}. Include typical home prep time. Return ONLY a JSON array of exactly ${e-s+1} items, no markdown: [{"rank":${s},"local":"name in ${c.lang}","english":"English name","prep":"X mins"},...]`, 850, apiKey)
-      .then(raw => { try { const items = xj(raw,"array").map((it,i)=>({...it,rank:s+i})); setMenu(prev => { const map = {}; [...prev,...items].forEach(it=>{map[it.rank]=it;}); return Object.values(map).sort((a,b)=>a.rank-b.rank); }); } catch { errs++; } })
-      .catch(()=>{ errs++; })
+    let firstErr = "";
+    // Stagger requests 250ms apart to avoid rate limits
+    await Promise.all(batches.map(([s,e], batchIdx) =>
+      new Promise(resolve => setTimeout(resolve, batchIdx * 250))
+      .then(() => apiFetch(`List exactly the dishes ranked #${s} to #${e} by menu popularity in ${c.name} (rank 1 = most common). Order strictly from rank ${s} down to ${e}. Include typical home prep time. Return ONLY a JSON array of exactly ${e-s+1} items, no markdown: [{"rank":${s},"local":"name in ${c.lang}","english":"English name","prep":"X mins"},...]`, 850, apiKey))
+      .then(raw => { try { const items = xj(raw,"array").map((it,i)=>({...it,rank:s+i})); setMenu(prev => { const map = {}; [...prev,...items].forEach(it=>{map[it.rank]=it;}); return Object.values(map).sort((a,b)=>a.rank-b.rank); }); } catch(e2) { errs++; if(!firstErr) firstErr=e2.message; } })
+      .catch((e2)=>{ errs++; if(!firstErr) firstErr=e2.message||"Unknown error"; })
     ));
-    if(errs) setMenuError(`${errs} batch(es) failed \u2014 some dishes may be missing.`);
+    if(errs) setMenuError(`${errs} batch(es) failed: ${firstErr}`);
     setMenuLoading(false); setMenuDone(true);
   }, [apiKey]);
 
@@ -338,23 +546,43 @@ export default function App() {
     );
   }
 
+  if (screen === "quiz") return <MenuQuiz apiKey={apiKey} onClose={() => setScreen("home")} />;
+
   if (screen==="home") return (
     <div className="app-container">
       {showShare && <ShareModal/>}
       {showCW && <SpinWheel items={COUNTRIES} colors={WC} label="name" onResult={c=>{setShowCW(false);openCountry(c);}} onClose={()=>setShowCW(false)}/>}
-      <div style={{background:"linear-gradient(160deg,#0f0a1e 0%,#1a0a0a 40%,#dc2626 100%)",padding:"3.5rem 1.5rem 3rem",textAlign:"center",position:"relative",overflow:"hidden"}}>
-        <div style={{position:"absolute",inset:0,background:"radial-gradient(circle at 50% 0%, rgba(220,38,38,.3) 0%, transparent 60%)"}}/>
+      {/* Hero */}
+      <div style={{background:"linear-gradient(160deg,#0f0a1e 0%,#1a0a2e 30%,#2d1810 60%,#4a1c0a 100%)",padding:"3.5rem 1.5rem 3rem",textAlign:"center",position:"relative",overflow:"hidden"}}>
+        {/* Decorative dots — world map hint */}
+        <svg style={{position:"absolute",inset:0,width:"100%",height:"100%",opacity:0.06}} viewBox="0 0 400 200" preserveAspectRatio="xMidYMid slice">
+          {/* Europe cluster */}
+          <circle cx="200" cy="60" r="2"/><circle cx="210" cy="55" r="1.5"/><circle cx="195" cy="65" r="1.5"/><circle cx="205" cy="70" r="1"/><circle cx="215" cy="62" r="1.2"/>
+          {/* Asia cluster */}
+          <circle cx="280" cy="70" r="2.5"/><circle cx="290" cy="80" r="2"/><circle cx="300" cy="75" r="1.5"/><circle cx="270" cy="85" r="1.8"/><circle cx="310" cy="90" r="1.2"/>
+          {/* Americas */}
+          <circle cx="100" cy="60" r="2"/><circle cx="90" cy="80" r="1.5"/><circle cx="110" cy="100" r="2"/><circle cx="105" cy="120" r="1.8"/><circle cx="115" cy="140" r="1.5"/>
+          {/* Africa */}
+          <circle cx="210" cy="110" r="2.5"/><circle cx="200" cy="120" r="1.5"/><circle cx="220" cy="130" r="2"/><circle cx="215" cy="145" r="1.2"/>
+          {[...Array(30)].map((_,i) => <circle key={i} cx={50+Math.random()*300} cy={30+Math.random()*140} r={0.5+Math.random()*1.5} fill="white"/>)}
+        </svg>
+        <div style={{position:"absolute",inset:0,background:"radial-gradient(ellipse at 50% 30%, rgba(180,100,50,.15) 0%, transparent 70%)"}}/>
         <div style={{position:"relative",zIndex:1}}>
           <div style={{position:"absolute",top:-8,right:0,display:"flex",gap:8}}>
             {apiKey && <PillBtn onClick={()=>setShowKeyInput(true)}>{"\ud83d\udd11"} Key</PillBtn>}
             <PillBtn onClick={()=>setShowShare(true)}>{"\ud83d\udd17"} Share</PillBtn>
           </div>
-          <div style={{fontSize:56,marginBottom:16,filter:"drop-shadow(0 4px 16px rgba(0,0,0,.4))"}}>{"\ud83c\udf7d\ufe0f"}</div>
-          <h1 className="fd" style={{fontSize:"clamp(30px, 6vw, 42px)",fontWeight:600,color:"#fff",margin:"0 0 12px",letterSpacing:"-1px",lineHeight:1.15}}>Global Menu Explorer</h1>
-          <p style={{fontSize:"clamp(14px, 2.5vw, 16px)",color:"rgba(255,255,255,.6)",margin:"0 auto 2rem",maxWidth:380,lineHeight:1.6}}>Discover the top 70 dishes from 12 countries, powered by AI</p>
-          <PillBtn onClick={()=>setShowCW(true)} style={{padding:"12px 28px",fontSize:14,background:"rgba(255,255,255,.08)",border:"1px solid rgba(255,255,255,.15)"}}>{"\ud83c\udfa1"} Help me pick a country</PillBtn>
+          <div style={{marginBottom:20}}>
+            <HeroIcon />
+          </div>
+          <h1 className="fd" style={{fontSize:"clamp(32px, 7vw, 48px)",fontWeight:600,color:"#fff",margin:"0 0 12px",letterSpacing:"-1px",lineHeight:1.1,fontStyle:"italic"}}>
+            <span style={{color:"rgba(255,200,150,.9)"}}>Global</span>{" "}Menu Explorer
+          </h1>
+          <p style={{fontSize:"clamp(14px, 2.5vw, 16px)",color:"rgba(255,255,255,.5)",margin:"0 auto 2rem",maxWidth:380,lineHeight:1.6}}>Discover the top 70 dishes from 12 countries, powered by AI</p>
+          <PillBtn onClick={()=>setShowCW(true)} style={{padding:"12px 28px",fontSize:14,background:"rgba(255,255,255,.06)",border:"1px solid rgba(255,255,255,.12)"}}>{"\ud83c\udfa1"} Help me pick a country</PillBtn>
         </div>
       </div>
+      {/* API key input */}
       {(!apiKey || showKeyInput) && (
         <div className="fade-up" style={{margin:"20px 16px 0",padding:"1.5rem",background:"var(--bg-card)",borderRadius:20,border:"1px solid var(--border)",boxShadow:"var(--shadow-sm)"}}>
           <h3 style={{fontSize:16,fontWeight:700,margin:"0 0 6px",color:"var(--text)"}}>{apiKey?"Update API Key":"\ud83d\udd11 Enter your Anthropic API Key"}</h3>
@@ -366,13 +594,14 @@ export default function App() {
           </form>
         </div>
       )}
-      <div style={{padding:"28px 16px 36px"}}>
+      {/* Country grid */}
+      <div style={{padding:"28px 16px 20px"}}>
         <p style={{fontSize:11,color:"var(--text-muted)",textAlign:"center",margin:"0 0 20px",letterSpacing:"2px",textTransform:"uppercase",fontWeight:600}}>Choose a country</p>
         <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(min(155px,calc(50% - 8px)),1fr))",gap:14}}>
           {COUNTRIES.map(c=>(
             <button key={c.code} onClick={()=>openCountry(c)} style={{background:"var(--bg-card)",border:"1px solid var(--border)",borderRadius:20,padding:0,cursor:"pointer",overflow:"hidden",textAlign:"center",transition:"all 0.25s cubic-bezier(.4,0,.2,1)"}} onMouseEnter={e=>{e.currentTarget.style.transform="translateY(-4px) scale(1.02)";e.currentTarget.style.borderColor=c.color;e.currentTarget.style.boxShadow="var(--shadow-lg)";}} onMouseLeave={e=>{e.currentTarget.style.transform="translateY(0) scale(1)";e.currentTarget.style.borderColor="var(--border)";e.currentTarget.style.boxShadow="none";}}>
-              <div style={{background:`linear-gradient(135deg, ${c.color}, ${c.color}cc)`,height:80,display:"flex",alignItems:"center",justifyContent:"center"}}>
-                <div style={{width:96,height:56,borderRadius:6,overflow:"hidden",boxShadow:"0 3px 12px rgba(0,0,0,.3)"}}><FlagSVG code={c.code}/></div>
+              <div style={{background:"#1e293b",height:80,display:"flex",alignItems:"center",justifyContent:"center"}}>
+                <CountryFlag code={c.code} size={40} style={{boxShadow:"0 3px 12px rgba(0,0,0,.3)"}} />
               </div>
               <div style={{padding:"12px 12px 14px"}}>
                 <div style={{fontSize:15,fontWeight:600,letterSpacing:"-0.3px",color:"var(--text)"}}>{c.name}</div>
@@ -381,6 +610,20 @@ export default function App() {
           ))}
         </div>
       </div>
+      {/* Quiz CTA */}
+      <div style={{padding:"0 16px 36px"}}>
+        <button onClick={() => { if (!apiKey) { setShowKeyInput(true); return; } setScreen("quiz"); }}
+          style={{width:"100%",padding:"18px 24px",borderRadius:20,border:"2px solid var(--border)",background:"var(--bg-card)",cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",gap:12,transition:"all 0.25s"}}
+          onMouseEnter={e=>{e.currentTarget.style.borderColor="#dc2626";e.currentTarget.style.transform="translateY(-2px)";e.currentTarget.style.boxShadow="var(--shadow-md)";}}
+          onMouseLeave={e=>{e.currentTarget.style.borderColor="var(--border)";e.currentTarget.style.transform="translateY(0)";e.currentTarget.style.boxShadow="none";}}>
+          <span style={{fontSize:24}}>{"?"}</span>
+          <div style={{textAlign:"left"}}>
+            <div style={{fontSize:16,fontWeight:700,color:"var(--text)"}}>Can you navigate a menu?</div>
+            <div style={{fontSize:13,color:"var(--text-muted)"}}>Test your knowledge of dishes from around the world</div>
+          </div>
+          <span style={{fontSize:18,color:"var(--text-muted)",marginLeft:"auto"}}>{"\u2192"}</span>
+        </button>
+      </div>
     </div>
   );
 
@@ -388,9 +631,12 @@ export default function App() {
     <div className="app-container">
       {showShare && <ShareModal/>}
       {showDW && menu.length>0 && <SpinWheel items={menu} colors={WC} label="local" onResult={d=>{setShowDW(false);openDish(d);}} onClose={()=>setShowDW(false)}/>}
-      <HeaderBar grad={grad} onBack={()=>setScreen("home")} backLabel="Home" left={<div style={{display:"flex",alignItems:"center",gap:10,flex:1,minWidth:0}}><div style={{width:44,height:28,borderRadius:6,overflow:"hidden",border:"1px solid rgba(255,255,255,.2)",flexShrink:0}}><FlagSVG code={country.code}/></div><div style={{minWidth:0}}><h2 className="fd" style={{fontSize:"clamp(17px, 3vw, 22px)",fontWeight:600,margin:0,color:"#fff",letterSpacing:"-0.3px",whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>{country.name}</h2><p style={{fontSize:12,color:"rgba(255,255,255,.6)",margin:0}}>{menuDone?`Top ${menu.length} dishes`:`Loading\u2026 ${menu.length}/70`}</p></div></div>} right={<>{menu.length>0 && <PillBtn onClick={()=>setShowDW(true)}>{"\ud83c\udfa1"} Pick</PillBtn>}<PillBtn onClick={()=>setShowShare(true)}>{"\ud83d\udd17"} Share</PillBtn></>}/>
+      <HeaderBar grad={grad} onBack={()=>setScreen("home")} backLabel="Home" left={<div style={{display:"flex",alignItems:"center",gap:10,flex:1,minWidth:0}}><FlagSmall code={country.code} /><div style={{minWidth:0}}><h2 className="fd" style={{fontSize:"clamp(17px, 3vw, 22px)",fontWeight:600,margin:0,color:"#fff",letterSpacing:"-0.3px",whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>{country.name}</h2><p style={{fontSize:12,color:"rgba(255,255,255,.6)",margin:0}}>{menuDone?`Top ${menu.length} dishes`:`Loading\u2026 ${menu.length}/70`}</p></div></div>} right={<>{menu.length>0 && <PillBtn onClick={()=>setShowDW(true)}>{"\ud83c\udfa1"} Pick</PillBtn>}<PillBtn onClick={()=>setShowShare(true)}>{"\ud83d\udd17"} Share</PillBtn></>}/>
       {menuLoading && menu.length===0 && (<div className="loading-pulse" style={{textAlign:"center",padding:"4rem 1.5rem"}}><div style={{fontSize:48,marginBottom:16}}>{"\ud83c\udf73"}</div><div className="fd" style={{fontSize:22,fontWeight:600,marginBottom:8,color:"var(--text)"}}>{"Loading menu\u2026"}</div><div style={{fontSize:14,color:"var(--text-muted)"}}>Fetching 7 batches in parallel</div></div>)}
-      {menuError && (<div className="fade-up" style={{margin:"12px 16px 0",padding:"12px 16px",background:"var(--warning-bg)",borderRadius:14,border:"1px solid var(--warning-border)",display:"flex",alignItems:"center",gap:10}}><span style={{fontSize:18}}>{"\u26a0\ufe0f"}</span><span style={{fontSize:13,color:"var(--warning-text)",fontWeight:500}}>{menuError}</span></div>)}
+      {menuError && (<div className="fade-up" style={{margin:"12px 16px 0",padding:"12px 16px",background:"var(--warning-bg)",borderRadius:14,border:"1px solid var(--warning-border)"}}>
+        <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:8}}><span style={{fontSize:18}}>{"\u26a0\ufe0f"}</span><span style={{fontSize:13,color:"var(--warning-text)",fontWeight:500}}>{menuError}</span></div>
+        <button onClick={()=>openCountry(country)} style={{fontSize:13,padding:"8px 18px",borderRadius:10,border:"1px solid var(--warning-border)",background:"transparent",cursor:"pointer",color:"var(--warning-text)",fontWeight:600}}>Retry</button>
+      </div>)}
       {menu.length>0 && (<div style={{padding:16}}><div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(min(180px,calc(50% - 8px)),1fr))",gap:14}}>{menu.map((item,i)=>(<div key={item.rank} className="fade-up" style={{animationDelay:`${Math.min(i*30,300)}ms`}}><MenuCard item={item} ac={ac} onClick={()=>openDish(item)}/></div>))}</div></div>)}
     </div>
   );
@@ -398,7 +644,7 @@ export default function App() {
   if (screen==="dish") return (
     <div className="app-container">
       {showShare && <ShareModal/>}
-      <HeaderBar grad={grad} onBack={()=>setScreen("menu")} backLabel="Menu" left={<div style={{display:"flex",alignItems:"center",gap:8,flex:1}}><div style={{width:36,height:22,borderRadius:4,overflow:"hidden",border:"1px solid rgba(255,255,255,.2)",flexShrink:0}}><FlagSVG code={country.code}/></div><span style={{fontSize:14,color:"rgba(255,255,255,.8)",fontWeight:500}}>{country.name}</span></div>} right={<PillBtn onClick={()=>setShowShare(true)}>{"\ud83d\udd17"} Share</PillBtn>}/>
+      <HeaderBar grad={grad} onBack={()=>setScreen("menu")} backLabel="Menu" left={<div style={{display:"flex",alignItems:"center",gap:8,flex:1}}><FlagSmall code={country.code} w={36} /><span style={{fontSize:14,color:"rgba(255,255,255,.8)",fontWeight:500}}>{country.name}</span></div>} right={<PillBtn onClick={()=>setShowShare(true)}>{"\ud83d\udd17"} Share</PillBtn>}/>
       <div style={{height:"clamp(200px, 35vw, 280px)",background:dishBg,display:"flex",alignItems:"center",justifyContent:"center",position:"relative",overflow:"hidden"}}>
         <DishImageFull english={dish.english} icon={dishIcon} bg={dishBg} />
         <div style={{position:"absolute",bottom:0,left:0,right:0,background:"linear-gradient(transparent,rgba(0,0,0,.7))",padding:"2.5rem 1.25rem 1.25rem",zIndex:1}}>
