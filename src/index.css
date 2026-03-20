@@ -16,6 +16,7 @@
   --warning-bg: #fffbeb;
   --warning-border: #fde68a;
   --warning-text: #92400e;
+  --accent: #dc2626;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -34,6 +35,7 @@
     --warning-bg: #422006;
     --warning-border: #92400e;
     --warning-text: #fde68a;
+    --accent: #ef4444;
   }
 }
 
